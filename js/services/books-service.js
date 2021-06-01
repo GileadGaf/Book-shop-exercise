@@ -4,6 +4,7 @@ const PAGE_SIZE = 5;
 
 var gBooks;
 var gSortBy = '';
+var gSortDiff = 1;
 var gPageIdx = 0;
 
 
@@ -15,13 +16,13 @@ function getBooks() {
     switch (gSortBy) {
         case 'TITLE':
             books = books.sort(function(a, b) {
-                return a.title.localeCompare(b.title);
+                return a.title.localeCompare(b.title) * gSortDiff;
             })
             break;
         case 'PRICE':
 
             books = books.sort(function(a, b) {
-                return b.price - a.price;
+                return (b.price - a.price) * gSortDiff;
             })
             break;
 
@@ -74,7 +75,9 @@ function updateRate(bookId, newRate) {
 }
 
 function setSort(sortBy) {
+    gSortDiff = (gSortBy === sortBy) ? -gSortDiff : -1;
     gSortBy = sortBy;
+
 }
 
 
