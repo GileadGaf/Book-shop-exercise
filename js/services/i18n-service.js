@@ -1,73 +1,81 @@
+const LANG_KEY = 'curr-lang';
+
 var gTrans = {
     title: {
-        en: 'What Todo?',
-        es: 'Mis Cosas Por Hacer',
-        he: 'משימות'
+        en: 'My book shop',
+        he: 'חנות הספרים שלי'
     },
-    subtitle: {
-        en: 'MVC - Model-View-Controller',
-        es: 'MVC - Modelo-Vista-Controlador',
-        he: 'מודל - ויו - קונטרולר',
+    'add-new-book': {
+        en: 'Create a new book',
+        he: 'הוספת ספר חדש',
     },
-    'filter-all': {
-        en: 'All',
-        es: 'Todos',
-        he: 'הכל',
+    'update-book': {
+        en: 'Update book',
+        he: 'עדכון ספר'
     },
-    'filter-active': {
-        en: 'Active',
-        es: 'Activo',
-        he: 'פעיל'
+    'id-label': {
+        en: 'ID',
+        he: 'מזהה',
     },
-    'filter-done': {
-        en: 'Done',
-        es: 'Completo',
-        he: 'הושלם',
+    'title-label': {
+        en: 'Title',
+        he: 'כותרת'
     },
-    'stat-todo-label': {
-        en: 'Todo',
-        es: 'Hacer',
-        he: 'לעשות',
+    'price-label': {
+        en: 'Price',
+        he: 'מחיר',
     },
-    'stat-active-label': {
-        en: 'Active',
-        es: 'Activo',
-        he: 'פעיל',
+    'actions-label': {
+        en: 'Actions',
+        he: 'פעולות',
     },
-    add: {
-        en: 'Add',
-        es: 'Aggregar',
-        he: 'הוסף',
+    'read-btn': {
+        en: 'Read',
+        he: 'קריאה',
     },
-    sure: {
-        en: 'Are you sure?',
-        es: 'Estas Seguru?',
-        he: 'בטוח נשמה?',
+    'update-btn': {
+        en: 'Update',
+        he: 'עדכון',
     },
-    'add-todo-placeholder': {
-        en: 'What needs to be done?',
-        es: 'Que te tienes que hacer?',
-        he: 'מה יש לעשות?'
+    'delete-btn': {
+        en: 'Delete',
+        he: 'מחיקה',
     },
-    // date: {
-    //     en: 'Date',
-    //     he: 'תאריך'
-    // }
+    rating: {
+        en: 'Rating',
+        he: 'דירוג'
+    },
+    'rate-this-book': {
+        en: 'Rate this book',
+        he: 'דרגו ספר זה'
+    },
+    'save-book': {
+        en: 'Save',
+        he: 'שמירה'
+    }
 }
 
-var gCurrLang = 'en';
+var gCurrLang;
+var gDefaultLang = 'en';
+
+initLang();
+
+function initLang() {
+    gCurrLang = loadCurrLangFromStorage();
+    if (!gCurrLang) gCurrLang = gDefaultLang;
+}
 
 function getTrans(transKey) {
     var keyTrans = gTrans[transKey]
-    // console.log(keyTrans);
+        // console.log(keyTrans);
 
     // TODO: if key is unknown return 'UNKNOWN'
     if (!keyTrans) return 'UNKNOWN'
-    // TODO: get from gTrans
+        // TODO: get from gTrans
 
     var txt = keyTrans[gCurrLang];
     // TODO: If translation not found - use english
-    if (!txt) return keyTrans.en
+    if (!txt) return keyTrans[gDefaultLang];
 
     return txt
 }
@@ -75,48 +83,67 @@ function getTrans(transKey) {
 function doTrans() {
     // TODO: 
     var els = document.querySelectorAll('[data-trans]')
-    // console.log(els);
+        // console.log(els);
 
     // for each el:
     //    get the data-trans and use getTrans to replace the innerText 
-    els.forEach(function (el) {
+    els.forEach(function(el) {
         // console.dir(el)
         var txt = getTrans(el.dataset.trans)
         if (el.nodeName === 'INPUT') el.placeholder = txt;
         else el.innerText = txt
-        //    ITP: support placeholder  
-            
+            //    ITP: support placeholder  
+
         // console.log('el.dataset', el.dataset.trans);       
     })
 }
 
 function setLang(lang) {
     gCurrLang = lang;
+    saveCurrLangToStorage();
 }
 
-function formatNumOlder(num) {
-    return num.toLocaleString('es')
+function getLang() {
+    return gCurrLang;
 }
 
-function formatNum(num) {
-    return new Intl.NumberFormat(gCurrLang).format(num);
-}
+// function formatNumOlder(num) {
+//     return num.toLocaleString('es')
+// }
+
+// function formatNum(num) {
+//     return new Intl.NumberFormat(gCurrLang).format(num);
+// }
 
 function formatCurrency(num) {
-    return new Intl.NumberFormat('he-IL', { style: 'currency', currency: 'ILS' }).format(num);
+    var curr = 'USD';
+    switch (gCurrLang) {
+        case 'en':
+            // num = convertNisToUsd(num);
+            break;
+        case 'he':
+            num = convertUsdToNis(num);
+            curr = 'ils'
+        default:
+            break;
+    }
+    return new Intl.NumberFormat(gCurrLang, { style: 'currency', currency: curr }).format(num);
 }
 
-function formatDate(time) {
 
-    var options = {
-        year: 'numeric', month: 'short', day: 'numeric',
-        hour: 'numeric', minute: 'numeric',
-        hour12: true,
-    };
 
-    return new Intl.DateTimeFormat(gCurrLang, options).format(time);
+function convertUsdToNis(num) {
+    return num * 3.24;
 }
 
-function kmToMiles(km) {
-    return km / 1.609;
+function convertNisToUsd(num) {
+    return num / 3.24;
+}
+
+function saveCurrLangToStorage() {
+    saveToStorage(LANG_KEY, gCurrLang);
+}
+
+function loadCurrLangFromStorage() {
+    return loadFromStorage(LANG_KEY);
 }

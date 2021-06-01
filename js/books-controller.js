@@ -2,7 +2,9 @@
 
 function onInit() {
     createBooks();
-    renderBooks();
+    onSetLang()
+    renderSelectLang();
+
 }
 
 function renderBooks() {
@@ -17,10 +19,10 @@ function renderBooks() {
         return `<tr onclick="onReadBook('${book.id}')">
        <td> ${book.id} </td>
        <td> ${book.title} </td>
-       <td> ${book.price}$ </td>
-      <td><button class="action-btn blue">Read</button> </td>
-      <td><button class="action-btn orange" onclick="onUpdateBook('${book.id}',event)">Update</button> </td>
-      <td><button class="action-btn red" onclick="onRemoveBook('${book.id}',event)">Delete</button> </td>
+       <td> ${formatCurrency(book.price)} </td>
+      <td><button data-trans="read-btn" class="action-btn blue">Read</button> </td>
+      <td><button data-trans="update-btn" class="action-btn orange" onclick="onUpdateBook('${book.id}',event)">Update</button> </td>
+      <td><button data-trans="delete-btn" class="action-btn red" onclick="onRemoveBook('${book.id}',event)">Delete</button> </td>
                </tr>`
     });
     elBooksList.innerHTML = strHtmls.join('');
@@ -43,28 +45,31 @@ function renderBooks() {
     var elPaging = document.querySelector('.paging');
     elPaging.innerHTML = strHtml;
 
-
+    doTrans();
 }
+
 
 
 function onAddBook() {
     var strHtml = `<form  onsubmit="onSaveBook(event,'ADD')">
-    <h2>Add a new book</h2>
-    <h3>Title: <input type="text" class="long-field" name="txt-book-title" placeholder="book title"></h3>
-    <h3>Price: <input type="text" class="long-field" name="txt-book-price" placeholder="price"></h3>
-    <button class="save-book">Save</button>
+    <h2 data-trans="add-new-book">Add a new book</h2>
+    <h3 ><span data-trans="title-label">Title</span>:<input data-trans="title-label"  type="text" class="long-field" name="txt-book-title" placeholder="book title"></h3>
+    <h3><span data-trans="price-label">Price</span>:<input data-trans="price-label" type="text" class="long-field" name="txt-book-price" placeholder="price"></h3>
+    <button data-trans="save-book" class="save-book">Save</button>
     </form>`
 
     var elModel = document.querySelector('.modal');
     var elBookSect = elModel.querySelector('.view-book');
     elBookSect.innerHTML = strHtml;
     elModel.hidden = false;
+    doTrans();
 }
 
 function onSaveBook(ev, action, bookId = 0) {
     ev.preventDefault();
     var bookTitle = document.querySelector('input[name=txt-book-title]').value;
     var bookPrice = +document.querySelector('input[name=txt-book-price]').value;
+    console.log(bookTitle + ' ' + bookPrice);
     if (!bookTitle | isNaN(bookPrice)) return;
     switch (action) {
         case 'ADD':
@@ -95,20 +100,17 @@ function onUpdateBook(bookId, ev) {
     ev.stopPropagation();
     var book = getBookById(bookId);
     var strHtml = `<form  onsubmit="onSaveBook(event,'UPDATE','${bookId}')">
-    <h2>Add a new book</h2>
-    <h3>Title: <input type="text" value="${book.title}" class="long-field" name="txt-book-title" placeholder="book title"></h3>
-    <h3>Price: <input type="text" value="${book.price}" class="long-field" name="txt-book-price" placeholder="price"></h3>
-    <button class="save-book">Save</button>
+    <h2 data-trans="update-book">Update book</h2>
+    <h3><span data-trans="title-label">Title</span>: <input data-trans="title-label" type="text" value="${book.title}" class="long-field" name="txt-book-title" placeholder="book title"></h3>
+    <h3><span data-trans="price-label">Price</span>: <input data-trans="price-label" type="text" value="${book.price}" class="long-field" name="txt-book-price" placeholder="price"></h3>
+    <button data-trans="save-book" class="save-book">Save</button>
     </form>`
 
     var elModel = document.querySelector('.modal');
     var elBookSect = elModel.querySelector('.view-book');
     elBookSect.innerHTML = strHtml;
     elModel.hidden = false;
-    // var newTitle = prompt('Please enter the book title');
-    // var newPrice = +prompt('Please enter the book\'s price');
-    // updateBook(bookId, newTitle, newPrice);
-    // renderBooks();
+    doTrans();
 }
 
 function onReadBook(bookId) {
@@ -118,11 +120,11 @@ function onReadBook(bookId) {
     var strHtml = `
    
     <h2>${book.title}</h2>
-    <h3>Price: ${book.price}$</h3>
-    <h3>Rating: <span>${book.rate}</span> </h3>
+    <h3><span data-trans="price-label"> Price</span>: ${formatCurrency(book.price)}</h3>
+    <h3><span data-trans="rating"> Rating </span>: <span class="book-rate">${book.rate}</span> </h3>
     <img src="${book.imgUrl}" />
     <section>
-        <h4>Rate the book</h4>
+        <h4 data-trans="rate-this-book">Rate the book</h4>
         <button onclick="onChangeRateInput(-1,'${book.id}')">➖</button>
         <input name="rate-input" type="number" min="1" max="10" value="${book.rate}">
         <button onclick="onChangeRateInput(1,'${book.id}')">➕</button>
@@ -132,6 +134,7 @@ function onReadBook(bookId) {
     var elBookSect = elModel.querySelector('.view-book');
     elBookSect.innerHTML = strHtml;
     elModel.hidden = false;
+    doTrans();
 }
 
 function onChangeRateInput(diff, bookId) {
@@ -142,7 +145,7 @@ function onChangeRateInput(diff, bookId) {
     if (rate < 1 || rate > 10) return;
     elRateInput.value = rate;
     onUpdateRate(bookId, rate)
-    document.querySelector('.modal h3 span').innerText = rate;
+    document.querySelector('.modal h3 .book-rate').innerText = rate;
 }
 
 function onUpdateRate(bookId, newRate) {
@@ -174,4 +177,17 @@ function onPageChanging(elPageBtn) {
 
     setPage(pageNum);
     renderBooks();
+}
+
+function onSetLang(lang = getLang()) {
+    setLang(lang);
+    // TODO: if lang is hebrew add RTL class to document.body
+    if (lang === 'he') document.body.classList.add('rtl')
+    else document.body.classList.remove('rtl')
+    renderBooks();
+
+}
+
+function renderSelectLang() {
+    document.querySelector('[name=select-lang]').value = getLang();
 }
